@@ -8,41 +8,26 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Unit;
 class AuthController extends Controller
 {
-   public function login(Request $request){
-        $array = ['error'=>''];
-
-        $validator = Validator::make($request->all(), [
-            'cpf' =>'required|digits:11',
-            'password'=>'required'
-        ]);
-
-        if(!$validator->fails()){
-            $cpf=$request->input('cpf');
-            $password=$request->input('password');
-
-            $token=auth()->attempt([
-                'cpf'=>$cpf,
-                'password'=>$password
-            ]);
-            
-            if(!$token) {
-                $array['error'] = 'CPF OU SENHA ESTAO ERRADOS';
-                return $array;
-            }
-            $array['token']=$token;
-
-            $user = auth()->user();
-            $array['user']=$user;
-
-            $properties = Unit::select(['id','name'])
-            ->where('id_owner',$user['id'])
-            ->get();
-
-            $array['user']['properties'] =$properties;
+    public function verifyAuth(){
+        if(Auth::check()){
+            $this->browser();
         }else{
-            $array['error']=$validator->errors()->first();
-            return $array;
+             return view('login');
         }
-        return $array;
+    }
+    public function browser(){
+      
+       return view('index');
+   }
+   public function login(Request $request){
+
+    
+        $credentials = $request->only('email','password');
+       
+        !empty($request->remember) ? $lembrar = true : $lembrar=false;
+         if (Auth::attempt($credentials,$lembrar))
+        {
+            return redirect()->intended('index');
+        }
    }
 }
